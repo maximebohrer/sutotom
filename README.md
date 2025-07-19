@@ -1,10 +1,6 @@
-# SUTOM
+# SUTOTOM
 
-Jeu de lettres en ligne (et en français) basé sur Wordle. Le jeu se trouve à l'adresse https://sutom.nocle.fr
-
-## Contributions
-
-Tout d'abord, merci si vous contribuez :) Pour l'instant, le mieux, c'est de créer un ticket quand vous voyez un bug, ça me permettra de trier et de prioriser tout ce que je dois faire. Comme la base de code n'est pas aussi propre que je voudrais, merci de créer un ticket et d'attendre un retour de ma part ( @JonathanMM ) avant de vous lancer à corps perdu dans le code.
+Jeu original de JonathanMM : [Github](https://github.com/elparasite/sutom) / [SUTOM](http://sutom.nocle.fr/)
 
 ## Développement
 
@@ -22,23 +18,18 @@ Puis, on lance le serveur :
 npm start
 ```
 
-### Avec Docker
+### Notes
 
-Un Dockerfile est disponible pour pouvoir démarrer le site en local sans `npm`.
-
-```sh
-docker build -t sutom .
-
-docker run -it --rm -p 4000:4000 sutom
+Avant, TypeScript était configuré pour usiliser l'ancien système de modules de JavaScript, c'est-à-dire la librairie RequireJS pour le navigateur et le standard CommonJS pour Node.
+Maintenant dans la config TypeScript `tsconfig.json` on utilise
 ```
+"target": "es2018"
+"module": "ESNext"
+```
+afin que le code compilé utilise le nouveau système import/export de JavaScript et qu'on ait plus besoin de RequireJS côté navigateur.
 
-### Accès au site
-
-Une fois démarré, le site sera dispo sur http://localhost:4000 et le typescript va se recompiler tout seul à chaque modification de fichier.
-
-## Autres infos et remerciements
-
-- Le dictionnaire utilisé est celui de [Grammalecte](https://grammalecte.net/dictionary.php?prj=fr). Merci à GaranceAmarante pour le script.
-- Merci à Emmanuel pour m'avoir fourni des mots à trouver.
-- Merci à tous les gens qui me remontent des bugs et qui me donnent des idées, ça m'aide beaucoup :)
-- Merci à toutes les personnes qui jouent, c'est une belle récompense que vous me donnez.
+Ceci affecte aussi la compilation du JavaScript serveur (`server.js`) puisque le code n'est pas séparé, donc on ajoute
+```
+"type": "module"
+```
+à la config NodeJS `package.json` car le JavaScript compilé utilise maintenant aussi le système import/export plutôt que l'ancien système CommonJS de Node. Je ne sais pas si tous les modules sont compatibles pas en tout cas ça marche pour Express.

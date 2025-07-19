@@ -1,4 +1,4 @@
-import { LettreStatut } from "./lettreStatut";
+import { LettreStatut } from "./lettreStatut.js";
 
 export default class LettreResultat {
   lettre: string = "";

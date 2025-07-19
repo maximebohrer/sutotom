@@ -1,6 +1,6 @@
-import LettreResultat from "./lettreResultat";
-import { LettreStatut } from "./lettreStatut";
-import NotificationMessage from "./notificationMessage";
+import LettreResultat from "./lettreResultat.js";
+import { LettreStatut } from "./lettreStatut.js";
+import NotificationMessage from "./notificationMessage.js";
 
 export default class FinDePartiePanel {
   private readonly _finDePartiePanel: HTMLElement;
@@ -9,6 +9,7 @@ export default class FinDePartiePanel {
   private readonly _defaitePanelMot: HTMLElement;
   private readonly _resume: HTMLPreElement;
   private readonly _resumeBouton: HTMLElement;
+  private readonly _title: HTMLElement = document.getElementById("fin-de-partie-panel-title") as HTMLElement;
   private readonly _datePartie: Date;
 
   private _resumeTexte: string = "";
@@ -23,6 +24,18 @@ export default class FinDePartiePanel {
 
     this._datePartie = datePartie;
 
+    document.getElementById("fin-de-partie-panel-ok")!.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this._finDePartiePanel.style.display = "none";
+      this._defaitePanel.style.display = "none";
+      this._victoirePanel.style.display = "none";
+    });
+
+    document.getElementById("fin-de-partie-panel-close")!.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this._finDePartiePanel.style.display = "none";
+    });
+
     this._resumeBouton.addEventListener("click", (event) => {
       event.stopPropagation();
       if (!navigator.clipboard) {
@@ -30,7 +43,7 @@ export default class FinDePartiePanel {
       }
 
       navigator.clipboard
-        .writeText(this._resumeTexte + "\n\nhttps://sutom.nocle.fr")
+        .writeText(this._resumeTexte + "\n\n" + window.location.href)
         .then(() => {
           NotificationMessage.ajouterNotification("Résumé copié dans le presse papier");
         })
@@ -40,7 +53,7 @@ export default class FinDePartiePanel {
     });
   }
 
-  public genererResume(estBonneReponse: boolean, resultats: Array<Array<LettreResultat>>): void {
+  public genererResume(estBonneReponse: boolean, resultats: Array<Array<LettreResultat>>, numeroPartie: number): void {
     let resultatsEmojis = resultats.map((mot) =>
       mot
         .map((resultat) => resultat.statut)
@@ -55,22 +68,24 @@ export default class FinDePartiePanel {
           }
         }, "")
     );
-    let dateGrille = this._datePartie.getTime();
-    let origine = new Date(2022, 0, 8).getTime();
 
-    let numeroGrille = Math.floor((dateGrille - origine) / (24 * 3600 * 1000)) + 1;
-
-    this._resumeTexte = "SUTOM #" + numeroGrille + " " + (estBonneReponse ? resultats.length : "-") + "/6\n\n" + resultatsEmojis.join("\n");
+    this._resumeTexte = "SUTOTOM #" + numeroPartie + " " + (estBonneReponse ? resultats.length : "-") + "/6\n\n" + resultatsEmojis.join("\n");
     this._resume.innerText = this._resumeTexte;
   }
 
   public afficher(estVictoire: boolean, motATrouver: string): void {
     this._finDePartiePanel.style.display = "block";
 
-    if (estVictoire) this._victoirePanel.style.display = "block";
+    if (estVictoire) {
+      this._title.innerText = "Félicitations !";
+      this._victoirePanel.style.display = "block";
+      this._defaitePanel.style.display = "none";
+    }
     else {
+      this._title.innerText = "Perdu !";
       this._defaitePanelMot.innerText = motATrouver;
       this._defaitePanel.style.display = "block";
+      this._victoirePanel.style.display = "none";
     }
   }
 }

@@ -1,25 +1,28 @@
-import Gestionnaire from "./gestionnaire";
-import LettreResultat from "./lettreResultat";
-import { LettreStatut } from "./lettreStatut";
+import { stat } from "fs";
+import Gestionnaire from "./gestionnaire.js";
+import LettreResultat from "./lettreResultat.js";
+import { LettreStatut } from "./lettreStatut.js";
+import { sync_blink } from "./utils.js";
 
 export default class Input {
-  private readonly _grille: HTMLElement;
   private readonly _inputArea: HTMLElement;
-  private readonly _gestionnaire: Gestionnaire;
+  private readonly gest: Gestionnaire;
   private readonly _premiereLettre: string;
+  private readonly statutLettres: { [lettre: string]: LettreStatut } = {};
 
   private _longueurMot: number;
   private _motSaisi: string;
-  private _estBloque: boolean;
 
-  public constructor(gestionnaire: Gestionnaire, longueurMot: number, premiereLettre: string) {
-    this._grille = document.getElementById("grille") as HTMLElement;
+  public constructor(gestionnaire: Gestionnaire) {
+    this.gest = gestionnaire;
     this._inputArea = document.getElementById("input-area") as HTMLElement;
-    this._premiereLettre = premiereLettre;
-    this._longueurMot = longueurMot;
-    this._gestionnaire = gestionnaire;
+    this._premiereLettre = this.gest.premiereLettre;
+    this._longueurMot = this.gest.longueurMot;
     this._motSaisi = "";
-    this._estBloque = false;
+
+    for (let resultat of this.gest.resultats) {
+      this.updateClavier(resultat);
+    }
 
     document.addEventListener(
       "keypress",
@@ -68,88 +71,59 @@ export default class Input {
   }
 
   private effacerLettre(): void {
-    if (this._estBloque) return;
+    if (this.gest.victoire || this.gest.perdu) return;
     if (this._motSaisi.length !== 0) {
       this._motSaisi = this._motSaisi.substring(0, this._motSaisi.length - 1);
     }
-    this._gestionnaire.actualiserAffichage(this._motSaisi);
+    this.gest.actualiserAffichageMotSaisi(this._motSaisi);
   }
 
   private validerMot(): void {
-    if (this._estBloque) return;
+    if (this.gest.victoire || this.gest.perdu) return;
     let mot = this._motSaisi;
-    this._gestionnaire.verifierMot(mot);
-    if (mot.length === this._longueurMot) {
+    if (this.gest.verifierMot(mot)) {
       this._motSaisi = "";
     }
   }
 
   private saisirLettre(lettre: string): void {
-    if (this._estBloque) return;
+    if (this.gest.victoire || this.gest.perdu) return;
     if (this._motSaisi.length >= this._longueurMot) return;
     if (this._motSaisi.length === 0 && lettre.toUpperCase() !== this._premiereLettre) this._motSaisi += this._premiereLettre;
     this._motSaisi += lettre;
-    this._gestionnaire.actualiserAffichage(this._motSaisi);
+    this.gest.actualiserAffichageMotSaisi(this._motSaisi);
   }
 
-  public bloquer(): void {
-    this._estBloque = true;
-  }
-
-  public updateClavier(resultats: Array<LettreResultat>): void {
-    if (this._estBloque) return;
-    let statutLettres: { [lettre: string]: LettreStatut } = {};
-    // console.log(statutLettres);
-    for (let resultat of resultats) {
-      if (!statutLettres[resultat.lettre]) statutLettres[resultat.lettre] = resultat.statut;
-      else {
-        switch (resultat.statut) {
-          case LettreStatut.BienPlace:
-            statutLettres[resultat.lettre] = LettreStatut.BienPlace;
-            break;
-          case LettreStatut.MalPlace:
-            if (statutLettres[resultat.lettre] !== LettreStatut.BienPlace) {
-              statutLettres[resultat.lettre] = LettreStatut.MalPlace;
-            }
-            break;
-          default:
-            break;
-        }
+  public updateClavier(resultat: Array<LettreResultat>): void {
+    for (let lettreResultat of resultat) {
+      if (!this.statutLettres[lettreResultat.lettre]){
+        this.statutLettres[lettreResultat.lettre] = lettreResultat.statut;
+        this.updateTouche(lettreResultat);
+      }
+      else if (lettreResultat.statut === LettreStatut.BienPlace && this.statutLettres[lettreResultat.lettre] !== LettreStatut.BienPlace) {
+        this.statutLettres[lettreResultat.lettre] = LettreStatut.BienPlace;
+        this.updateTouche(lettreResultat);
+      } else if (lettreResultat.statut === LettreStatut.MalPlace && this.statutLettres[lettreResultat.lettre] !== LettreStatut.BienPlace && this.statutLettres[lettreResultat.lettre] !== LettreStatut.MalPlace) {
+        this.statutLettres[lettreResultat.lettre] = LettreStatut.MalPlace;
+        this.updateTouche(lettreResultat);
       }
     }
-    // console.log(statutLettres);
+  }
 
-    let touches = this._inputArea.querySelectorAll(".input-lettre");
-
-    for (let lettre in statutLettres) {
-      let statut = statutLettres[lettre];
-      for (let numTouche = 0; numTouche < touches.length; numTouche++) {
-        let touche = touches.item(numTouche) as HTMLElement;
-        if (touche === undefined || touche === null) continue;
-        if (touche.dataset["lettre"] === lettre) {
-          // console.log(lettre + " => " + statut);
-          switch (statut) {
-            case LettreStatut.BienPlace:
-              touche.className = "";
-              touche.classList.add("input-lettre");
-              touche.classList.add("lettre-bien-place");
-              break;
-            case LettreStatut.MalPlace:
-              if (touche.classList.contains("lettre-bien-place")) break;
-              touche.className = "";
-              touche.classList.add("input-lettre");
-              touche.classList.add("lettre-mal-place");
-              break;
-            default:
-              if (touche.classList.contains("lettre-bien-place")) break;
-              if (touche.classList.contains("lettre-mal-place")) break;
-              touche.className = "";
-              touche.classList.add("input-lettre");
-              touche.classList.add("lettre-non-trouve");
-              break;
-          }
+  private updateTouche(lettreResultat: LettreResultat): void { // fonction exécutée seulement si le statut de la lettre a changé
+    let touche = this._inputArea.querySelector(`.input-lettre[data-lettre="${lettreResultat.lettre}"]`) as HTMLElement;
+    if (touche) {
+      switch (lettreResultat.statut) {
+        case LettreStatut.BienPlace:
+          touche.className = "input-lettre rouge";
           break;
-        }
+        case LettreStatut.MalPlace:
+          touche.className = "input-lettre jaune";
+          sync_blink(touche);
+          break;
+        default:
+          touche.className = "input-lettre gris";
+          break;
       }
     }
   }
