@@ -1,5 +1,8 @@
 # SUTOTOM
 
+SUTOM pour automaticiens
+[Essayer](https://maximebohrer.github.io/sutotom/)
+
 Jeu original de JonathanMM : [Github](https://github.com/elparasite/sutom) / [SUTOM](http://sutom.nocle.fr/)
 
 ## Développement
