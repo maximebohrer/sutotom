@@ -5,11 +5,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SUTOTOM</title>
-    <script type="module" src="js/main.js"></script>
+    <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="jeu.css" type="text/css" />
     <link rel="stylesheet" href="98.css" type="text/css"/>
     <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="apple-touch-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="theme-color" content="#008080">
+    <script type="module" src="js/main.js"></script>
   </head>
   <body>
     <div id="fin-de-partie-panel" class="window popup" style="margin: 32px; width: fit-content">
@@ -59,8 +61,8 @@
       
     <div class="fenetre-jeu window" style="width: fit-content">
       <div class="title-bar">
-        <div class="title-bar-text">
-          SUTOTOM v25.7.12
+        <div class="title-bar-text" id="version">
+          SUTOTOM v1.0.0
         </div>
         <div class="title-bar-controls">
           <button aria-label="Minimize"></button>

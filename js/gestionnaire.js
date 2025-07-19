@@ -31,6 +31,7 @@ export default class Gestionnaire {
         this._input = new Input(this);
         this._compositionMotATrouver = this.decompose(this._motATrouver);
         this._victoirePanel = new FinDePartiePanel(this.datePartie);
+        document.getElementById("version").innerText = `SUTOTOM v${this.datePartie.getFullYear() % 100}.${this.datePartie.getMonth() + 1}.${this.datePartie.getDate()}`;
         NotificationMessage.initialiser();
         if (this.victoire || this.perdu) {
             this._victoirePanel.genererResume(this.victoire, this.resultats, this.numeroPartie);
